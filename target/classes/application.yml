@@ -1,0 +1,64 @@
+#端口号配置 
+server:
+  port: 8088
+xxl:
+  job:
+    executor:
+      logpath: /data/applogs/sshr-job/jobhandler
+      appname: sshr-job
+      port: 9999
+      logretentiondays: -1
+      ip:
+    admin:
+      addresses: http://127.0.0.1:8087/sshrJob
+    accessToken:
+spring:
+  #考勤数据库配置
+  attendSource:
+    driverClass: com.mysql.jdbc.Driver #加载数据库的驱动
+    url: jdbc:mysql://db.tmocloud.com:3306/attendance?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull
+    username: attendance
+    password: chuheridang5@
+  #薪资数据库配置
+  payrollSource:
+    driverClass: com.mysql.jdbc.Driver #加载数据库的驱动
+    url: jdbc:mysql://db.tmocloud.com:3306/pay_management?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull
+    username: pay_management
+    password: chuheridang5@
+  #其它公用配置
+  datasource:
+    initialSize: 5 #资源池初始化大小
+    maxActive: 20 #资源池最大激活数
+    maxOpenPreparedStatements: 20
+    maxWait: 60000 #最大等待时间
+    minEvictableIdleTimeMillis: 300000
+    minIdle: 1 #最小空闲数量
+    poolPreparedStatements: true
+    testOnBorrow: false
+    testOnReturn: false
+    testWhileIdle: true
+    timeBetweenEvictionRunsMillis: 60000
+    type: com.alibaba.druid.pool.DruidDataSource
+    validationQuery: select 'x'
+    # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+    filters: stat,wall
+  #缓存配置
+  redis:
+    database: 0
+    host: v2.tmooa.com
+    port: 6379
+    password: a3FQLMot6
+    max-total: 5
+    max-idle: 8
+    min-idle: 2
+    max-active: 300
+    max-wait: -1
+    max-wait-millis: 1000
+    timeout: 2000
+logging:
+  config: classpath:logback.xml
+  level:
+    org.springframework.web: INFO
+    com.ctgtmo.ssg: DEBUG
+    me.chanjar.weixin: DEBUG
+      
