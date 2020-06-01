@@ -13,6 +13,12 @@ xxl:
       addresses: http://127.0.0.1:8087/sshrJob
     accessToken:
 spring:
+  #员工数据库配置
+  employSource:
+    driverClass: com.mysql.jdbc.Driver #加载数据库的驱动
+    url: jdbc:mysql://db.tmocloud.com:3306/sshr?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull
+    username: ssg
+    password: chuheridang5@
   #考勤数据库配置
   attendSource:
     driverClass: com.mysql.jdbc.Driver #加载数据库的驱动
