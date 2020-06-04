@@ -50,7 +50,7 @@ spring:
     filters: stat,wall
   #缓存配置
   redis:
-    database: 0
+    database: 1
     host: v2.tmooa.com
     port: 6379
     password: a3FQLMot6

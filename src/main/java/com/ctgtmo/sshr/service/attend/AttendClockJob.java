@@ -296,7 +296,56 @@ public class AttendClockJob {
       //获取员工所在考勤组是否开启节假日平排休
       boolean holidayRest = employList.get(i).isHolidayRest();
       AttendType attendType = AttendType.fromAttendType(groupType);
+      AttendClock clock = new AttendClock();
       switch (attendType) {
+        //1为固定类型
+        case GROUP_FIXED_TYPE:
+          //判断当天是否是特殊日期,如果是直接读取班次信息
+          if (CollectionUtils.isNotEmpty(groupSpecialList)) {
+            //是否包含特殊日期标志
+            boolean specialFlag = true;
+            //因为是查询多个考勤组的特殊日期,有可能当前的考勤组没有特殊日期
+            for (int j = 0; j < groupSpecialList.size(); j++) {
+              //特殊日期的考勤组主键
+              int specialGroupId = groupSpecialList.get(j).getGroupId();
+              //只有相等的情况下说明今天是特殊日期直接读取班次信息
+              if (groupId == specialGroupId) {
+                //判断特殊日期是休息日2/工作日1
+                if (groupSpecialList.get(j).getIsWorkday() == 1) {
+                  //获取特殊日期中的shiftId
+                  int specialShiftId = groupSpecialList.get(j).getShiftsId();
+                  for (int a = 0; a < shiftList.size(); a++) {
+                    //比较相同的shiftId
+                    int shiftId = shiftList.get(a).getId();
+                    //休息时间
+                    String restTime = StringUtils.isNotBlank(shiftList.get(a).getRestTime()) ? shiftList.get(a).getRestTime() : "";
+                    //班次名称
+                    String shiftName = shiftList.get(a).getName();
+                    if (shiftId == specialShiftId) {
+                      //生成固定工作日的打卡数据实体
+                      clock = new AttendClock("", groupType, specialGroupId, employId, companyId, workDay, shiftId, shiftName, "#4196f6", restTime, 0, shiftList
+                      .get(a).getWorkOn(), 3, shiftList.get(a).getWorkOut(), 3, 1);
+                    }
+                  }
+                } else {
+                  //生成固定休息日的打卡数据
+                  clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#ffffff", "", 0, "", 1, "", 1, 2);
+                }
+                //说明已经生成特殊日期打卡数据
+                specialFlag = false;
+                break;
+              }
+            }
+            //没有特殊日期的情况,需要考虑节假日是否安排休息
+            if (specialFlag) {
+              clock = getFixedGroup(groupWorkList, holidayList, shiftList, groupId, holidayRest, groupType, employId, companyId, workDay);
+            }
+          } else {
+            //按照正常的流程,没有特殊日期的情况,需要考虑节假日是否安排休息
+            clock = getFixedGroup(groupWorkList, holidayList, shiftList, groupId, holidayRest, groupType, employId, companyId, workDay);
+          }
+          resultEmployList.add(clock);
+          break;
         //2为排班类型
         case GROUP_SCHEDUL_TYPE:
           //排版中是否包含此员工,默认不包含
@@ -325,15 +374,13 @@ public class AttendClockJob {
                   //循环看有多少班次上下班时间
                   for (int m = 0; m < shiftTime.size(); m++) {
                     //员工排班正常班次实体
-                    AttendClock clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, schedul.getId(), schedul.getShiftsName(), schedul
-                    .getColor(), restTime, schedul.getWorkstationId(), shiftTime.get(m).getBegin(), 3, shiftTime.get(m).getEnd(), 3, 1);
-                    resultEmployList.add(clock);
+                    clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, schedul.getId(), schedul.getShiftsName(), schedul.getColor(),
+                    restTime, schedul.getWorkstationId(), shiftTime.get(m).getBegin(), 3, shiftTime.get(m).getEnd(), 3, 1);
                   }
                 } else {
                   //说明是拉取的时间不包含班次信息只有上下班时间
-                  AttendClock clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, schedul.getId(), schedul.getShiftsName(), schedul
-                  .getColor(), "", schedul.getWorkstationId(), schedul.getBeginTime(), 3, schedul.getEndTime(), 3, 1);
-                  resultEmployList.add(clock);
+                  clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, schedul.getId(), schedul.getShiftsName(), schedul.getColor(),
+                  "", schedul.getWorkstationId(), schedul.getBeginTime(), 3, schedul.getEndTime(), 3, 1);
                 }
               }
               //设置为已经查询到此员工的排班信息
@@ -343,12 +390,9 @@ public class AttendClockJob {
           //如果排班中查询不到这个员工的排班信息则默认为当天休息
           if (!isHaveEmploy) {
             //员工排班休息班次实体
-            AttendClock clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#ffffff", "", 0, "", 1, "", 1, 2);
-            resultEmployList.add(clock);
+            clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#ffffff", "", 0, "", 1, "", 1, 2);
           }
-          break;
-        //1为固定类型
-        case GROUP_FIXED_TYPE:
+          resultEmployList.add(clock);
           break;
         //3为自由类型
         case GROUP_FREE_TYPE:
@@ -365,12 +409,10 @@ public class AttendClockJob {
                 //判断特殊日期是休息日2/工作日1
                 if (groupSpecialList.get(j).getIsWorkday() == 1) {
                   //生成工作日的打卡数据实体
-                  AttendClock clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#4196f6", "", 0, "", 3, "", 3, 1);
-                  resultEmployList.add(clock);
+                  clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#4196f6", "", 0, "", 3, "", 3, 1);
                 } else {
                   //生成休息日的打卡数据实体
-                  AttendClock clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#ffffff", "", 0, "", 1, "", 1, 2);
-                  resultEmployList.add(clock);
+                  clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#ffffff", "", 0, "", 1, "", 1, 2);
                 }
                 //说明已经生成特殊日期打卡数据
                 specialFlag = false;
@@ -379,14 +421,13 @@ public class AttendClockJob {
             }
             //没有特殊日期的情况,需要考虑节假日是否安排休息
             if (specialFlag) {
-              AttendClock clock = getFreeGroup(groupWorkList, holidayList, groupId, holidayRest, groupType, employId, companyId, workDay);
-              resultEmployList.add(clock);
+              clock = getFreeGroup(groupWorkList, holidayList, groupId, holidayRest, groupType, employId, companyId, workDay);
             }
           } else {
             //按照正常的流程,没有特殊日期的情况,需要考虑节假日是否安排休息
-            AttendClock clock = getFreeGroup(groupWorkList, holidayList, groupId, holidayRest, groupType, employId, companyId, workDay);
-            resultEmployList.add(clock);
+            clock = getFreeGroup(groupWorkList, holidayList, groupId, holidayRest, groupType, employId, companyId, workDay);
           }
+          resultEmployList.add(clock);
           break;
       }
     }
@@ -399,11 +440,11 @@ public class AttendClockJob {
   * @param groupWorkList 工作日班次集合
   * @param holidayList 节假日list
   * @param groupId 考勤组id
-  * @param holidayRest考勤组是否开启节假日排休
-  * @param groupType考勤组类型
-  * @param employId员工主键
-  * @param companyId公司主键
-  * @param workDay工作日
+  * @param holidayRest 考勤组是否开启节假日排休
+  * @param groupType 考勤组类型
+  * @param employId 员工主键
+  * @param companyId 公司主键
+  * @param workDay 工作日
   * @return AttendClock 
   * @author 王共亮
   * @date 2020年6月4日上午9:52:32
@@ -422,11 +463,11 @@ public class AttendClockJob {
             if (holidayRest) {
               //判断当天是不会法定节假日
               if (CollectionUtils.isNotEmpty(holidayList)) {
-                //按照自由班次生成打卡数据
-                clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#4196f6", "", 0, "", 3, "", 3, 1);
-              } else {
                 //生成休息日的打卡数据实体
                 clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#ffffff", "", 0, "", 1, "", 1, 2);
+              } else {
+                //按照自由班次生成打卡数据
+                clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#4196f6", "", 0, "", 3, "", 3, 1);
               }
             } else {
               //按照自由班次生成打卡数据
@@ -442,4 +483,83 @@ public class AttendClockJob {
     }
     return clock;
   }
+
+  /** 
+  * @Title: getFixedGroup 
+  * @Description: 生成固定考勤组的打卡数据
+  * @param groupWorkList 工作日班次集合
+  * @param holidayList 节假日list
+  * @param shiftList 班次信息list
+  * @param groupId 考勤组主键
+  * @param holidayRest 考勤组是否开启节假日排休
+  * @param groupType 考勤组类型
+  * @param employId 员工主键
+  * @param companyId 公司主键
+  * @param workDay 工作日
+  * @return AttendClock 
+  * @author 王共亮
+  * @date 2020年6月4日下午3:11:13
+  */
+  public AttendClock getFixedGroup(List<AttendGroupWorkday> groupWorkList, List<Holiday> holidayList, List<AttendShift> shiftList, int groupId,
+  boolean holidayRest, int groupType, String employId, int companyId, String workDay) {
+    AttendClock clock = new AttendClock();
+    //需要根据工作日排班数据得到具体的班次信息
+    if (CollectionUtils.isNotEmpty(groupWorkList)) {
+      //正常情况下一个考勤组周几对应一条数据
+      for (int a = 0; a < groupWorkList.size(); a++) {
+        //获取固定排班中的考勤组id
+        int workGroupId = groupWorkList.get(a).getGroupId();
+        int workShiftId = groupWorkList.get(a).getShiftsId();
+        if (workGroupId == groupId) {
+          //判断当天是工作日1/休息日2
+          if (groupWorkList.get(a).getIsWorkday() == 1) {
+            //判断是否开启了节假日自动排休
+            if (holidayRest) {
+              //查询当天是不是法定节假日
+              if (CollectionUtils.isNotEmpty(holidayList)) {
+                //生成固定休息日的打卡数据
+                clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#ffffff", "", 0, "", 1, "", 1, 2);
+              } else {
+                //正常的固定排班
+                for (int b = 0; b < shiftList.size(); b++) {
+                  //比较相同的shiftId
+                  int shiftId = shiftList.get(b).getId();
+                  //休息时间
+                  String restTime = StringUtils.isNotBlank(shiftList.get(b).getRestTime()) ? shiftList.get(b).getRestTime() : "";
+                  //班次名称
+                  String shiftName = shiftList.get(b).getName();
+                  if (shiftId == workShiftId) {
+                    //生成固定工作日的打卡数据实体
+                    clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, shiftId, shiftName, "#4196f6", restTime, 0, shiftList.get(b)
+                    .getWorkOn(), 3, shiftList.get(b).getWorkOut(), 3, 1);
+                  }
+                }
+              }
+            } else {
+              //正常的固定排班
+              for (int b = 0; b < shiftList.size(); b++) {
+                //比较相同的shiftId
+                int shiftId = shiftList.get(b).getId();
+                //休息时间
+                String restTime = StringUtils.isNotBlank(shiftList.get(b).getRestTime()) ? shiftList.get(b).getRestTime() : "";
+                //班次名称
+                String shiftName = shiftList.get(b).getName();
+                if (shiftId == workShiftId) {
+                  //生成固定工作日的打卡数据实体
+                  clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, shiftId, shiftName, "#4196f6", restTime, 0, shiftList.get(b)
+                  .getWorkOn(), 3, shiftList.get(b).getWorkOut(), 3, 1);
+                }
+              }
+            }
+          } else {
+            //生成固定休息日的打卡数据
+            clock = new AttendClock("", groupType, groupId, employId, companyId, workDay, 0, "", "#ffffff", "", 0, "", 1, "", 1, 2);
+          }
+          break;
+        }
+      }
+    }
+    return clock;
+  }
+
 }
