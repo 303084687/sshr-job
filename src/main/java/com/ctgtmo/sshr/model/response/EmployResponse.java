@@ -18,6 +18,12 @@ public class EmployResponse {
   //考勤组主键
   private int groupId;
 
+  //考勤组类型
+  private int groupType;
+
+  //考勤组节假日是否排休
+  private boolean holidayRest;
+
   public String getEmployId() {
     return employId;
   }
@@ -40,6 +46,22 @@ public class EmployResponse {
 
   public void setGroupId(int groupId) {
     this.groupId = groupId;
+  }
+
+  public int getGroupType() {
+    return groupType;
+  }
+
+  public void setGroupType(int groupType) {
+    this.groupType = groupType;
+  }
+
+  public boolean isHolidayRest() {
+    return holidayRest;
+  }
+
+  public void setHolidayRest(boolean holidayRest) {
+    this.holidayRest = holidayRest;
   }
 
 }
