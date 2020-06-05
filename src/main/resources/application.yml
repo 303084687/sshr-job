@@ -4,13 +4,13 @@ server:
 xxl:
   job:
     executor:
-      logpath: /data/applogs/sshr-job/jobhandler
+      logpath: /data/project/sshr-job-admin/logs/
       appname: sshr-job
       port: 9999
       logretentiondays: -1
       ip:
     admin:
-      addresses: http://localhost/sshrJob
+      addresses: http://localhost:8087/sshrJob
     accessToken:
 spring:
   #员工数据库配置
