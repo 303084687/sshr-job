@@ -79,10 +79,9 @@ public class AttendClockJob {
     //查询默认考勤组数据确定公司数量
     List<Map<String, Object>> defaultcompanyGroupList = attendRecordDao.queryDefaultCompanyList();
     List<Integer> companyList = new ArrayList<>();
-    companyList.add(320);
     if (CollectionUtils.isNotEmpty(defaultcompanyGroupList)) {
       for (int i = 0; i < defaultcompanyGroupList.size(); i++) {
-        //companyList.add(Integer.parseInt(defaultcompanyGroupList.get(i).get("company_id").toString()));
+        companyList.add(Integer.parseInt(defaultcompanyGroupList.get(i).get("company_id").toString()));
       }
     }
     //判断公司有考勤组的情况下才走线程任务

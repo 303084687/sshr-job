@@ -10,7 +10,7 @@ xxl:
       logretentiondays: -1
       ip:
     admin:
-      addresses: http://127.0.0.1:8087/sshrJob
+      addresses: http://localhost/sshrJob
     accessToken:
 spring:
   #员工数据库配置
