@@ -1,9 +1,0 @@
-com\ctgtmo\sshr\JobExecutorApplication.class
-com\ctgtmo\sshr\config\PayrollSqlDao.class
-com\ctgtmo\sshr\config\AttendSqlDao.class
-com\ctgtmo\sshr\config\EmployConfig.class
-com\ctgtmo\sshr\config\EmploySqlDao.class
-com\ctgtmo\sshr\service\TestJob.class
-com\ctgtmo\sshr\config\AttendConfig.class
-com\ctgtmo\sshr\config\PayrollConfig.class
-com\ctgtmo\sshr\config\JobConfig.class
