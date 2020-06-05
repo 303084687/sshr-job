@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.fastjson.JSONArray;
+import com.ctgtmo.sshr.config.RedisHelper;
 import com.ctgtmo.sshr.model.AttendClock;
 import com.ctgtmo.sshr.model.AttendGroup;
 import com.ctgtmo.sshr.model.AttendGroupSpecial;
@@ -56,6 +58,12 @@ public class AttendClockJob {
    */
   @Autowired
   private AttendRecordDao attendRecordDao;
+
+  /**
+   * redis缓存
+   */
+  @Autowired
+  private RedisHelper redisHelper;
 
   /** 
   * @Title: addAttendClockDay 
@@ -213,10 +221,29 @@ public class AttendClockJob {
           //合并获取全公司人员考勤信息-包含没有部门的员工
           realOrgEmployList.addAll(otherGroupList);
           realOrgEmployList.addAll(defaultEmployList);
+          //获取当前查询日期
+          String workDay = LocalDate.now().toString();
+          //从redis中查询在生成记录之前已经生成的员工打卡数据,redis的key=yyyyMMdd+companyId+employId(20200603_12_xxxx),value值为employId
+          String redisKey = workDay.replace("-", "") + "_" + companyId + "_";
+          Set<String> keys = redisHelper.Keys(redisKey);
+          List<EmployResponse> resultEmployList = new ArrayList<>();
+          if (CollectionUtils.isNotEmpty(keys)) {
+            //redis中已经生成打卡数据的员工
+            List<EmployResponse> redisEmployList = new ArrayList<>();
+            //把已生成的员工打卡数据中删掉
+            for (String key : keys) {
+              EmployResponse employ = new EmployResponse();
+              employ.setEmployId(key.replace(redisKey, ""));
+              redisEmployList.add(employ);
+            }
+            //去掉重复员工,得到剩下员工集合
+            resultEmployList = realOrgEmployList.stream().filter(item -> !redisEmployList.stream().map(e -> e.getEmployId()).collect(Collectors.toList())
+            .contains(item.getEmployId())).collect(Collectors.toList());
+          }
           //获取每个员工的排班数据
-          List<AttendClock> employShiftList = getEmployClock(companyId, groupList, defaultEmployList, groupIdList, scheduFlag, fixedFlag);
-          //从redis中查询在生成记录之前已经生成的员工打卡数据,redis的key=employIdyyyyMMdd,value值为employId
-
+          List<AttendClock> employShiftList = getEmployClock(companyId, groupList, resultEmployList, groupIdList, scheduFlag, fixedFlag, workDay);
+          //批量添加数据库
+          attendRecordDao.batchAddEmployClock(employShiftList);
         }
       }
     }
@@ -236,7 +263,7 @@ public class AttendClockJob {
   * @date 2020年6月3日上午10:02:36
   */
   public List<AttendClock> getEmployClock(int companyId, List<AttendGroup> groupList, List<EmployResponse> employList, List<Integer> groupIdList,
-  boolean scheduFlag, boolean fixedFlag) throws ParseException {
+  boolean scheduFlag, boolean fixedFlag, String workDay) throws ParseException {
     //定义返回的员工排班信息
     List<AttendClock> resultEmployList = new ArrayList<>();
     //循环员工和考勤组数据赋值考勤组属性
@@ -250,8 +277,6 @@ public class AttendClockJob {
         }
       }
     }
-    //获取当前查询日期
-    String workDay = LocalDate.now().toString();
     List<AttendSchedul> schedulList = new ArrayList<>();
     //scheduFlag true包含排班
     if (scheduFlag) {

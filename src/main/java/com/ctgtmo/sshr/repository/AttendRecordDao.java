@@ -3,6 +3,7 @@ package com.ctgtmo.sshr.repository;
 import java.util.List;
 import java.util.Map;
 
+import com.ctgtmo.sshr.model.AttendClock;
 import com.ctgtmo.sshr.model.AttendGroup;
 import com.ctgtmo.sshr.model.AttendGroupSpecial;
 import com.ctgtmo.sshr.model.AttendGroupWorkday;
@@ -102,4 +103,13 @@ public interface AttendRecordDao {
   * @date 2020年6月3日下午2:02:48
   */
   List<AttendShift> queryShiftList(List<Integer> shiftList);
+
+  /** 
+  * @Title: batchAddEmployClock 
+  * @Description: 
+  * @param employList void  
+  * @author 王共亮
+  * @date 2020年6月5日上午9:40:44
+  */
+  void batchAddEmployClock(List<AttendClock> employList);
 }

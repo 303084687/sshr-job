@@ -6,11 +6,14 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ctgtmo.sshr.config.AttendSqlDao;
 import com.ctgtmo.sshr.mapper.AttendClockMapper;
+import com.ctgtmo.sshr.model.AttendClock;
 import com.ctgtmo.sshr.model.AttendGroup;
 import com.ctgtmo.sshr.model.AttendGroupSpecial;
 import com.ctgtmo.sshr.model.AttendGroupWorkday;
@@ -160,4 +163,18 @@ public class AttendRecordDaoImpl implements AttendRecordDao {
     return attendSqlDao.getNamedParamterDao().query(AttendClockMapper.ATTEND_SHIFT, paramSource, new BeanPropertyRowMapper<>(AttendShift.class));
   }
 
+  /** 
+   * @Title: batchAddEmployClock 
+   * @Description: 
+   * @param employList void  
+   * @author 王共亮
+   * @date 2020年6月5日上午9:40:44
+   */
+  @Override
+  @Transactional
+  public void batchAddEmployClock(List<AttendClock> employList) {
+    //批量插入打卡数据
+    SqlParameterSource[] batch = SqlParameterSourceUtils.createBatch(employList.toArray());
+    attendSqlDao.getNamedParamterDao().batchUpdate(AttendClockMapper.ADD_EMPLOY_CLOCK, batch);
+  }
 }

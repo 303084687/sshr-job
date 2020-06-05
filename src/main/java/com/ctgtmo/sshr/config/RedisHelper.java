@@ -207,16 +207,22 @@ public class RedisHelper {
   /**
    * 获取所有哈希表中的字段
    * @param key
-   
    */
   public Set<Object> hKeys(String key) {
     return redisTemplate.opsForHash().keys(key);
   }
 
   /**
+   * 获取哈希表中模糊搜索
+   * @param key
+   */
+  public Set<String> Keys(String key) {
+    return redisTemplate.keys("*" + key + "*");
+  }
+
+  /**
    * 获取哈希表中字段的数量
    * @param key
-   
    */
   public Long hSize(String key) {
     return redisTemplate.opsForHash().size(key);

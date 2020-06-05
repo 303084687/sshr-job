@@ -34,4 +34,9 @@ public class AttendClockMapper {
 
   //@Fields QUERY_ATTEND_SCHEDUL:根据考勤组和日期查询排班详情
   public static final String QUERY_ATTEND_SCHEDUL = "SELECT group_id,employ_id,attend_time,company_id FROM attend_schedul WHERE group_id IN(:groupIds) AND attend_day=:workDay";
+
+  //@Fields ADD_EMPLOY_CLOCK:批量插入员工打卡数据
+  public static final String ADD_EMPLOY_CLOCK = "INSERT INTO attend_clock_copy (id,group_type,group_id,employ_id,company_id,work_date,shift_id,shift_name,color,rest_time,workstation_id,"
+  + "work_on,work_off,work_on_state,work_off_state,is_rest_day,is_default,create_time,work_on_late,work_off_early,work_on_is_field,work_off_is_field,work_on_fix_state,work_off_fix_state)VALUES"
+  + "(:id,:groupType,:groupId,:employId,:companyId,:workDate,:shiftId,:shiftName,:color,:restTime,:workstationId,:workOn,:workOff,:workOnState,:workOffState,:isRestDay,1,now(),'0','0',1,1,0,0)";
 }
