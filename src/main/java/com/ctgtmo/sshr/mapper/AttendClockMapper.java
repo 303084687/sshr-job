@@ -23,7 +23,7 @@ public class AttendClockMapper {
   public static final String QUERY_GROUP_WORKDAY = "SELECT shifts_id,group_id,weekday,is_workday FROM attend_group_workday WHERE group_id IN(:groupIds) AND weekday=:workDay";
 
   //@Fields QUERY_GROUP_SPECIAL:根据考勤组id和当天日期查询特殊日期排班
-  public static final String QUERY_GROUP_SPECIAL = "SELECT shifts_id,group_id,weekday,is_workday FROM attend_group_workday WHERE group_id IN(:groupIds) AND weekday=:workDay";
+  public static final String QUERY_GROUP_SPECIAL = "SELECT shifts_id,group_id,special_day,is_workday FROM attend_group_special WHERE group_id IN(:groupIds) AND special_day=:workDay";
 
   //@Fields QUERY_HOLIDAY:查询假期数据
   public static final String QUERY_HOLIDAY = "SELECT type,holiday FROM holiday WHERE holiday=:workDay AND type=1";
